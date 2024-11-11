@@ -1,0 +1,90 @@
+module "eks" {
+  source                      = "git::https://github.com/Digidense/terraform_module.git//eks?ref=feature/DD-41/eks_cluster"
+  role_name                   = var.role_name
+  node_attachment_name        = var.node_attachment_name
+  eks_cluster_attachment_name = var.eks_cluster_attachment_name
+  eks_cluster_name            = var.eks_cluster_name
+  addons_versions             = var.addons_versions
+  node_group_name             = var.node_group_name
+  cluster_version             = var.cluster_version
+  desired_size                = var.desired_size
+  max_size                    = var.max_size
+  mix_size                    = var.mix_size
+}
+
+variable "role_name" {
+  type        = string
+  description = "Name of the IAM role for the EKS cluster"
+  default     = "eks-policy-roleA"
+}
+
+variable "node_attachment_name" {
+  type        = string
+  description = "Name of the IAM policy attachment for the EKS node group"
+  default     = "eks-node-attachments1A"
+}
+
+variable "eks_cluster_attachment_name" {
+  type        = string
+  description = "Name of the IAM policy attachment for the EKS cluster"
+  default     = "eks-policy-attachments1A"
+}
+
+variable "eks_cluster_name" {
+  type        = string
+  description = "Name of the EKS cluster"
+  default     = "Flash_Cluster_EKS"
+}
+
+
+variable "addons_versions" {
+  type = list(object({
+    name    = string
+    version = string
+  }))
+  description = "List of versions of addons to be installed on the EKS cluster"
+  default = [
+    {
+      name    = "vpc-cni"
+      version = "v1.16.0-eksbuild.1"
+    },
+    {
+      name    = "kube-proxy"
+      version = "v1.29.0-eksbuild.1"
+    },
+    {
+      name    = "coredns"
+      version = "v1.11.1-eksbuild.4"
+    }
+  ]
+}
+
+variable "node_group_name" {
+  type        = string
+  description = "Name of the EKS cluster"
+  default     = "Node_GroupA"
+}
+
+variable "cluster_version" {
+  type        = string
+  description = "Eks cluster version"
+  default     = "1.29"
+}
+
+variable "desired_size" {
+  type        = number
+  description = "desired_size EKS cluster node creation"
+  default     = 2
+}
+
+variable "max_size" {
+  type        = number
+  description = "max_size EKS cluster node creation"
+  default     = 2
+}
+
+variable "mix_size" {
+  type        = number
+  description = "mix_size EKS cluster node creation"
+  default     = 1
+}
