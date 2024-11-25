@@ -1,93 +1,98 @@
-name: Python CI/CD Pipeline for Calculator
+name: Python CI/CD Pipeline
 
 on:
-  workflow_dispatch:
-    inputs:
-      repo_name:
-        description: 'Repository Name'
-        required: true
-        default: 'your-repo-name'
-      deploy_env:
-        description: 'Deployment Environment'
-        required: true
-        default: 'your-deploy-environment'
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  source:
+  source-checkout:
     name: Source Checkout
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-  test:
-    name: Unit Tests
+  pytest:
+    name: Run Pytest
     runs-on: ubuntu-latest
+    needs: source-checkout
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.9"
 
-      - name: Install Dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run Pytest
+        run: pytest --maxfail=5 --disable-warnings --tb=short
+
+  vulnerability-scanning:
+    name: Vulnerability Scanning
+    runs-on: ubuntu-latest
+    needs: pytest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run Bandit Security Scan
+        run: bandit -r . -ll
+
+  build-and-store-artifacts:
+    name: Build Project and Store Artifacts
+    runs-on: ubuntu-latest
+    needs: vulnerability-scanning
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Run Unit Tests
-        run: pytest
 
-  vulnerability_scan:
-    name: Vulnerability Scanning
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Install Safety
-        run: pip install safety
-
-      - name: Run Vulnerability Scan
-        run: safety check --full-report
-
-  build:
-    name: Build Project and Store Artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Package Code
+      - name: Build project
         run: |
-          mkdir dist
-          cp cal.py dist/
+          python setup.py sdist bdist_wheel
+          mkdir -p build_output
+          mv dist/* build_output/
 
-      - name: Upload Artifacts
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: calculator-artifacts
-          path: dist/
+          path: build_output/
 
   deploy:
     name: Deploy to Environment
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-and-store-artifacts
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: calculator-artifacts
-          path: artifacts/
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Deploy Script
-        run: |
-          echo "Deploying calculator script to ${{ github.event.inputs.deploy_env }}"
-          # Add deployment logic here, e.g., copy to a server
+      - name: Simulate deployment
+        run: echo "Deploying application..."
