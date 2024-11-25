@@ -1,4 +1,4 @@
-name: Python CI/CD Pipeline
+name: Python CI/CD Pipeline for Calculator
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
 
   test:
-    name: Unit Tests and Coverage
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -31,15 +31,14 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest
       
       - name: Run Unit Tests
-        run: pytest --cov=.
+        run: pytest
 
   vulnerability_scan:
     name: Vulnerability Scanning
@@ -47,10 +46,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      
+
       - name: Install Safety
         run: pip install safety
-      
+
       - name: Run Vulnerability Scan
         run: safety check --full-report
 
@@ -60,22 +59,21 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      
-      - name: Build Artifacts
-        run: python setup.py sdist bdist_wheel
+
+      - name: Package Code
+        run: |
+          mkdir dist
+          cp cal.py dist/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: python-build-artifacts
+          name: calculator-artifacts
           path: dist/
 
   deploy:
@@ -86,10 +84,10 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: python-build-artifacts
+          name: calculator-artifacts
           path: artifacts/
 
-      - name: Deploy Artifacts
+      - name: Deploy Script
         run: |
-          echo "Deploying artifacts from artifacts/ to ${{ github.event.inputs.deploy_env }}"
-          # Add your deployment script or commands here
+          echo "Deploying calculator script to ${{ github.event.inputs.deploy_env }}"
+          # Add deployment logic here, e.g., copy to a server
