@@ -7,13 +7,9 @@ on:
         description: 'Repository Name'
         required: true
         default: 'your-repo-name'
-      docker_image_name:
-        description: 'Docker Image Name'
-        required: true
-        default: 'your-image-name'
       deploy_env:
         description: 'Deployment Environment'
-        required: true
+        required: false
         default: 'your-deploy-environment'
 
 jobs:
@@ -59,7 +55,7 @@ jobs:
         run: safety check --full-report
 
   build:
-    name: Build Project
+    name: Build Project and Store Artifacts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -76,37 +72,24 @@ jobs:
       - name: Build Artifacts
         run: python setup.py sdist bdist_wheel
 
-      - name: Store Artifacts
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts
+          name: python-build-artifacts
           path: dist/
-
-  image_build:
-    name: Docker Image Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build Docker Image
-        run: docker build -t ${{ github.event.inputs.docker_image_name }} .
-      
-      - name: Push Docker Image
-        run: docker push ${{ github.event.inputs.docker_image_name }}
 
   deploy:
     name: Deploy to Environment
     runs-on: ubuntu-latest
-    needs: image_build
+    needs: build
     steps:
-      - name: Deploy Image
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: python-build-artifacts
+          path: artifacts/
+
+      - name: Deploy Artifacts
         run: |
-          echo "Deploying ${{ github.event.inputs.docker_image_name }} to ${{ github.event.inputs.deploy_env }}"
+          echo "Deploying artifacts from artifacts/ to ${{ github.event.inputs.deploy_env }}"
           # Add your deployment script or commands here
