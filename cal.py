@@ -1,45 +1,15 @@
-def add(a, b):
-    return a + b
+import pytest
+from cal import add, subtract, multiply, divide
 
-def subtract(a, b):
-    return a - b
+def test_add():
+    assert add(2, 3) == 5
 
-def multiply(a, b):
-    return a * b
+def test_subtract():
+    assert subtract(5, 3) == 2
 
-def divide(a, b):
-    if b != 0:
-        return a / b
-    else:
-        return "Error: Division by zero is not allowed."
+def test_multiply():
+    assert multiply(2, 3) == 6
 
-def calculator():
-    print("Simple Calculator")
-    print("Select operation:")
-    print("1. Add")
-    print("2. Subtract")
-    print("3. Multiply")
-    print("4. Divide")
-
-    try:
-        choice = int(input("Enter choice (1/2/3/4): "))
-        if choice in [1, 2, 3, 4]:
-            num1 = float(input("Enter first number: "))
-            num2 = float(input("Enter second number: "))
-
-            if choice == 1:
-                print(f"The result is: {add(num1, num2)}")
-            elif choice == 2:
-                print(f"The result is: {subtract(num1, num2)}")
-            elif choice == 3:
-                print(f"The result is: {multiply(num1, num2)}")
-            elif choice == 4:
-                print(f"The result is: {divide(num1, num2)}")
-        else:
-            print("Invalid input. Please choose a valid operation.")
-
-    except ValueError:
-        print("Error: Invalid input. Please enter numbers only.")
-
-if _name_ == "_main_":
-    calculator()
+def test_divide():
+    assert divide(6, 2) == 3
+    assert divide(5, 0) == "Error: Division by zero is not allowed."
